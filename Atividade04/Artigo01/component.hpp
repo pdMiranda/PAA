@@ -26,7 +26,7 @@ public:
         }
     }
 
-    // Encontrar o representante (raiz) do conjunto ao qual o vértice pertence
+    // Encontrar a raiz do conjunto ao qual o vértice pertence
     int find(int vertex)
     {
         if (parent[vertex] != vertex)
@@ -71,7 +71,7 @@ public:
         return maxWeight; // Int(C): maior peso na MST da componente
     }
 
-    // Implementar o algoritmo de segmentação com base no artigo
+    // Implementar o algoritmo de segmentação
     void segmentGraph(Graph &graph, double k)
     {
         vector<double> internalDifference(graph.numVertices, 0.0); // Int(C)

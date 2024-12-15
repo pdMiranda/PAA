@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <random>
-#include "imageloader.hpp" // Para salvar a nova imagem
+#include "imageloader.hpp"
 #include "graph.hpp"
 #include "component.hpp"
 #include <unordered_map>
@@ -61,11 +61,9 @@ public:
             throw runtime_error("Erro ao salvar a imagem: " + filename);
         }
 
-        // Escrever o cabeçalho PPM
         file << "P3\n";
         file << width << " " << height << "\n255\n";
 
-        // Escrever os pixels
         for (const auto &row : image)
         {
             for (const auto &pixel : row)

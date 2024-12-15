@@ -1,61 +1,51 @@
+#include "graph.hpp"
+#include "imageloader.hpp"
+#include "maxflow.hpp"
+#include "color_segments.hpp"
 #include <iostream>
-#include <fstream>
-#include <filesystem>
+#include <string>
 #include <vector>
 #include <cmath>
-#include "graph.hpp"
-#include "MaxFlowSolver.hpp"
-#include "imageloader.hpp"
+#include <stdexcept>
+#include <cstring>
+#include <fstream>
 
 using namespace std;
 
-string getFileNameWithoutExtension(const string &filePath)
+bool fileExists(const string &filePath)
 {
-    size_t lastSlash = filePath.find_last_of("/");
-    size_t lastDot = filePath.find_last_of(".");
-
-    if (lastDot == string::npos || (lastSlash != string::npos && lastDot < lastSlash))
-        return filePath.substr(lastSlash + 1); // Sem extensão
-
-    return filePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
+    ifstream file(filePath);
+    return file.good();
 }
 
-void savePPM(const string &filename, const vector<vector<Pixel>> &image, int width, int height)
+string getFileNameWithoutExtension(const string &filePath)
 {
-    ofstream file(filename, ios::binary);
-    if (!file.is_open())
-    {
-        throw runtime_error("Erro ao salvar o arquivo PPM!");
-    }
+    size_t lastSlash = filePath.find_last_of("/\\");
+    size_t lastDot = filePath.find_last_of(".");
+    if (lastDot == string::npos || (lastSlash != string::npos && lastDot < lastSlash))
+        return filePath.substr(lastSlash + 1);
 
-    // Escrever o cabeçalho
-    file << "P6\n"
-         << width << " " << height << "\n255\n";
-
-    // Escrever os dados da imagem
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            unsigned char rgb[3] = {static_cast<unsigned char>(image[y][x].r),
-                                    static_cast<unsigned char>(image[y][x].g),
-                                    static_cast<unsigned char>(image[y][x].b)};
-            file.write(reinterpret_cast<char *>(rgb), 3);
-        }
-    }
-
-    file.close();
+    return filePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
 }
 
 int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <filename>\n";
-        return 1;
+        cerr << "Uso: segmentar <arquivo>" << endl;
+        return -1;
     }
 
-    std::string filename = argv[1];
+    string filename = argv[1];
+
+    if (!fileExists(filename))
+    {
+        cerr << "Erro: Arquivo '" << filename << "' não encontrado." << endl;
+        return -1;
+    }
+
+    string outputFilename = "images/saida/" + getFileNameWithoutExtension(filename) + "_out.ppm";
+
     int width, height;
 
     try
@@ -63,61 +53,60 @@ int main(int argc, char *argv[])
         // Carregar a imagem e obter a matriz de pixels
         auto image = loadPPM(filename, width, height);
 
-        double sigma = 50.0;
+        double sigma = 10.0;
 
-        vector<double> objProb(width * height, 0.7); // Probabilidade inicial de ser objeto
-        vector<double> bgProb(width * height, 0.3);  // Probabilidade inicial de ser fundo
+        vector<double> objProb(width * height, 0.5); // Probabilidade inicial de ser objeto
+        vector<double> bgProb(width * height, 0.5);  // Probabilidade inicial de ser fundo
 
         vector<bool> isSeedObject(width * height, false);
         vector<bool> isSeedBackground(width * height, false);
-
         // Exemplo: marque alguns pixels manualmente como seeds
-        isSeedObject[2] = true;
-        isSeedBackground[8] = true;
+        // Função para verificar proximidade de uma cor
+
+        isSeedObject[1] = true;
+        objProb[1] = 0.99; // Alta probabilidade de objeto
+        bgProb[1] = 0.01;
+
+        isSeedBackground[15] = true;
+        objProb[15] = 0.01; // Alta probabilidade de fundo
+        bgProb[15] = 0.99;
 
         // Criar o grafo a partir da imagem
-        int numVertices = width * height;
-        MaxFlowSolver solver(numVertices);
+        Graph graph(image, width, height, sigma, objProb, bgProb);
 
-        // Adicionar arestas ao solver com base na imagem
-        for (int y = 0; y < height; ++y)
+        // Configurar os t-links
+        for (int i = 0; i < width * height; ++i)
         {
-            for (int x = 0; x < width; ++x)
-            {
-                int current = y * width + x;
-                // Adicionar arestas com base nos vizinhos da imagem
-                if (x + 1 < width)
-                {
-                    int right = y * width + (x + 1);
-                    double weight = exp(-pow(image[y][x].r - image[y][x + 1].r, 2) / (2 * sigma * sigma));
-                    solver.addEdge(current, right, weight);
-                }
+            graph.tLinkSource[i] = -log(objProb[i]);
+            graph.tLinkSink[i] = -log(bgProb[i]);
 
-                if (y + 1 < height)
-                {
-                    int below = (y + 1) * width + x;
-                    double weight = exp(-pow(image[y][x].r - image[y + 1][x].r, 2) / (2 * sigma * sigma));
-                    solver.addEdge(current, below, weight);
-                }
+            if (isSeedObject[i])
+            {
+                graph.tLinkSource[i] = INFINITY; // Conecta ao source
+                graph.tLinkSink[i] = 0;          // Não conecta ao sink
+            }
+            if (isSeedBackground[i])
+            {
+                graph.tLinkSource[i] = 0;      // Não conecta ao source
+                graph.tLinkSink[i] = INFINITY; // Conecta ao sink
             }
         }
 
-        // Realizar a segmentação com o método de fluxo máximo
-        double maxFlow = solver.edmondsKarp(0, width * height - 1); // Source = 0, Sink = último pixel
+        // Calcular o fluxo máximo e obter o corte mínimo
+        double maxFlowValue = graph.maxFlow();
+        cout << "Fluxo maximo: " << maxFlowValue << endl;
 
-        cout << "Fluxo maximo: " << maxFlow << endl;
+        vector<bool> segmentation = graph.segment();
+        cout << "Segmentacao concluida. Tamanho: " << segmentation.size() << endl;
 
-        // Obter o nome do arquivo sem a extensão
-        string baseFilename = getFileNameWithoutExtension(filename);
-        string outputFilename = "images/saida/" + baseFilename + "_out.ppm"; // Adiciona "_out.ppm" no final do nome
-
-        // Exemplo de como salvar a imagem processada
-        savePPM(outputFilename, image, width, height);
+        vector<vector<Pixel>> coloredImage = ImageSegmentColorizer::colorizeSegmentation(image, segmentation, width, height);
+        ImageSegmentColorizer::savePPM(outputFilename, coloredImage, width, height);
+        cout << "Imagem segmentada salva em: " << outputFilename << endl;
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
         cerr << "Erro: " << e.what() << endl;
-        return 1;
+        return -1;
     }
 
     return 0;

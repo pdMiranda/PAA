@@ -36,7 +36,7 @@ vector<vector<Pixel>> loadPPM(const string &filename, int &width, int &height)
     // Ler largura, altura e valor máximo
     int maxColorValue;
     file >> width >> height >> maxColorValue;
-    file.ignore(); // Ignorar caractere de nova linha
+    file.ignore();
 
     if (maxColorValue != 255)
     {
