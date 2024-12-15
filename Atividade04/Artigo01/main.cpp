@@ -2,14 +2,14 @@
 #include <fstream>
 #include <vector>
 #include <stdexcept>
-#include <sstream>
-
+#include <chrono>
 #include "imageloader.hpp"
 #include "graph.hpp"
 #include "component.hpp"
 #include "color_components.hpp"
 
 using namespace std;
+using namespace chrono;
 
 // Função para imprimir a matriz de pixels
 void printImage(const vector<vector<Pixel>> &image, int width, int height)
@@ -60,7 +60,7 @@ bool fileExists(const string &filePath)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2) // Esperamos apenas um argumento: o nome do arquivo
+    if (argc != 2)
     {
         cerr << "Uso: segmentar <arquivo>" << endl;
         return -1;
@@ -76,28 +76,50 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    string outputDir = "images/saida/";
+    string inputFileName = getFileNameWithoutExtension(inputFile);
+    string outputFile = outputDir + inputFileName + "_out.ppm";
+
     try
     {
-        // Carregar a imagem e processar
+        // Medir o tempo de execução geral do programa
+        auto start = high_resolution_clock::now();
+
+        // Carregar a imagem
+        auto loadStart = high_resolution_clock::now();
         auto image = loadPPM(inputFile, width, height);
+        auto loadEnd = high_resolution_clock::now();
+
+        // Criar o grafo da imagem
+        auto graphStart = high_resolution_clock::now();
         Graph graph(image, width, height);
+        auto graphEnd = high_resolution_clock::now();
+
+        // Segmentar o grafo
+        auto colorStart = high_resolution_clock::now();
 
         double K = 300.0;
         GraphComponents components(graph.numVertices);
         components.segmentGraph(graph, K);
 
-        int componentesnum = components.getNumberOfComponents();
-        cout << "Numero de componentes detectados: " << componentesnum << endl;
-
         auto coloredImage = ImageColorizer::colorComponents(image, components, width, height);
 
-        // Gerar nome do arquivo de saída
-        string outputDir = "images/saida/";
-        string inputFileName = getFileNameWithoutExtension(inputFile);
-        string outputFile = outputDir + inputFileName + "_out.ppm";
+        auto colorEnd = high_resolution_clock::now();
 
+        // Salvar a imagem segmentada
+        auto saveStart = high_resolution_clock::now();
         ImageColorizer::savePPM(outputFile, coloredImage, width, height);
-        cout << "Imagem segmentada salva como '" << outputFile << "'." << endl;
+        auto saveEnd = high_resolution_clock::now();
+
+        // Exibir tempo total
+        auto end = high_resolution_clock::now();
+
+        // Tempos de execução em nanosegundos
+        cout << "Tempo de carga: " << duration_cast<nanoseconds>(loadEnd - loadStart).count() << "ns." << endl;
+        cout << "Tempo de criacao do grafo: " << duration_cast<nanoseconds>(graphEnd - graphStart).count() << "ns." << endl;
+        cout << "Tempo de segmentacao: " << duration_cast<nanoseconds>(colorEnd - colorStart).count() << "ns." << endl;
+        cout << "Tempo de salvamento: " << duration_cast<nanoseconds>(saveEnd - saveStart).count() << "ns." << endl;
+        cout << "Tempo total: " << duration_cast<nanoseconds>(end - start).count() << "ns." << endl;
     }
     catch (const exception &e)
     {
@@ -108,5 +130,15 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+// **Complexity Analysis
+// * - Loading Image: O(W * H), where W is the width and H is the height of the image. Each pixel is read from the file.
+// * - Graph Creation: O(W * H * 8), where W is the width and H is the height. For each pixel, a node is created and edges are added to neighboring pixels (up to 8 neighbors).
+// * - Segmentation: O(K * n * d), where K is the number of clusters, n is the number of pixels (n = W * H), and d is the number of dimensions (typically 3 for RGB colors).
+// * - Colorization: O(W * H), where W is the width and H is the height. Each pixel is processed to assign the appropriate color based on the segment.
+// * - Saving Image: O(W * H), where W is the width and H is the height. Each pixel is written to the output file.
+
+// * - Overall, the complexity of the segmentation algorithm depends on the number of clusters and the number of pixels in the image. The colorization and saving steps are linear with respect to the number of pixels in the image.
+
+// Compile command:
 // g++ main.cpp -o segmentar
 // segmentar images/teste.ppm

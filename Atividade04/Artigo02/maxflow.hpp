@@ -114,3 +114,10 @@ public:
 };
 
 #endif
+
+/**
+ * Análise de complexidade:
+ * - A técnica Push-Relabel pode ter uma complexidade na pior caso de O(V^3).
+ * - O algoritmo utiliza uma estrutura de fila (queue) para gerenciar os nós ativos e vetores para armazenar capacidades, fluxos, e alturas,
+ *   o que torna as operações individuais de push e relabel eficientes.
+ */

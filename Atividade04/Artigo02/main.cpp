@@ -9,15 +9,18 @@
 #include <stdexcept>
 #include <cstring>
 #include <fstream>
+#include <chrono>
 
 using namespace std;
 
+// Função para verificar a existência de um arquivo
 bool fileExists(const string &filePath)
 {
     ifstream file(filePath);
     return file.good();
 }
 
+// Função para obter o nome do arquivo sem extensão
 string getFileNameWithoutExtension(const string &filePath)
 {
     size_t lastSlash = filePath.find_last_of("/\\");
@@ -51,7 +54,10 @@ int main(int argc, char *argv[])
     try
     {
         // Carregar a imagem e obter a matriz de pixels
+        auto start = chrono::high_resolution_clock::now(); // Início da medição de tempo
         auto image = loadPPM(filename, width, height);
+        auto end = chrono::high_resolution_clock::now();
+        cout << "Tempo para carregar a imagem: " << chrono::duration<double>(end - start).count() << " segundos." << endl;
 
         double sigma = 10.0;
 
@@ -60,9 +66,8 @@ int main(int argc, char *argv[])
 
         vector<bool> isSeedObject(width * height, false);
         vector<bool> isSeedBackground(width * height, false);
-        // Exemplo: marque alguns pixels manualmente como seeds
-        // Função para verificar proximidade de uma cor
 
+        // Marcar alguns pixels manualmente como seeds
         isSeedObject[1] = true;
         objProb[1] = 0.99; // Alta probabilidade de objeto
         bgProb[1] = 0.01;
@@ -72,7 +77,10 @@ int main(int argc, char *argv[])
         bgProb[15] = 0.99;
 
         // Criar o grafo a partir da imagem
+        start = chrono::high_resolution_clock::now();
         Graph graph(image, width, height, sigma, objProb, bgProb);
+        end = chrono::high_resolution_clock::now();
+        cout << "Tempo para criar o grafo: " << chrono::duration<double>(end - start).count() << " segundos." << endl;
 
         // Configurar os t-links
         for (int i = 0; i < width * height; ++i)
@@ -93,15 +101,28 @@ int main(int argc, char *argv[])
         }
 
         // Calcular o fluxo máximo e obter o corte mínimo
+        start = chrono::high_resolution_clock::now();
         double maxFlowValue = graph.maxFlow();
+        end = chrono::high_resolution_clock::now();
         cout << "Fluxo maximo: " << maxFlowValue << endl;
+        cout << "Tempo para calcular o fluxo maximo: " << chrono::duration<double>(end - start).count() << " segundos." << endl;
 
+        // Análise de complexidade do cálculo do fluxo máximo:
+        // O(E*f), onde E é o número de arestas e f é o valor do fluxo máximo.
+        // Utiliza algoritmos como Edmonds-Karp ou Push-Relabel.
+
+        start = chrono::high_resolution_clock::now();
         vector<bool> segmentation = graph.segment();
+        end = chrono::high_resolution_clock::now();
         cout << "Segmentacao concluida. Tamanho: " << segmentation.size() << endl;
+        cout << "Tempo para segmentar: " << chrono::duration<double>(end - start).count() << " segundos." << endl;
 
+        start = chrono::high_resolution_clock::now();
         vector<vector<Pixel>> coloredImage = ImageSegmentColorizer::colorizeSegmentation(image, segmentation, width, height);
         ImageSegmentColorizer::savePPM(outputFilename, coloredImage, width, height);
+        end = chrono::high_resolution_clock::now();
         cout << "Imagem segmentada salva em: " << outputFilename << endl;
+        cout << "Tempo para salvar imagem segmentada: " << chrono::duration<double>(end - start).count() << " segundos." << endl;
     }
     catch (const exception &e)
     {
@@ -111,3 +132,17 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+// **Complexity Analysis**
+// * Loading Image: O(W * H), where W is width and H is height. Reads each pixel.
+// * Graph Creation: O(W * H * 8), creating nodes and edges for each pixel and its neighbors.
+// * Max-Flow Calculation: O(E * f), where E is the number of edges and f is the max flow value.
+// * Segmentation: O(W * H), iterating over each pixel to determine its segment.
+// * Colorization: O(W * H), assigning colors to each pixel based on its segment.
+// * Saving Image: O(W * H), writing each pixel to the output file.
+
+// * Overall: O(W * H * 8 + E * f), where E is the number of edges and f is the max flow value.
+
+// Compile command:
+// g++ main.cpp -o segmentar
+// segmentar images/teste.ppm
