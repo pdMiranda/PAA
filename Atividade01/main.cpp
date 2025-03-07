@@ -4,16 +4,15 @@
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
-#include <iomanip> // para setprecision
+#include <iomanip>
 using namespace std;
 using namespace std::chrono;
 
-// Classe que representa o grafo utilizando lista de adjacência
 class Graph
 {
 public:
-    int V;                   // número de vértices
-    vector<vector<int>> adj; // lista de adjacência
+    int V;
+    vector<vector<int>> adj;
 
     Graph(int V)
     {
@@ -21,14 +20,12 @@ public:
         adj.resize(V);
     }
 
-    // Adiciona aresta bidirecional (u, v)
     void addEdge(int u, int v)
     {
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
 
-    // Remove a aresta (u, v) de ambas as listas
     void removeEdge(int u, int v)
     {
         auto it = find(adj[u].begin(), adj[u].end(), v);
@@ -39,14 +36,12 @@ public:
             adj[v].erase(it);
     }
 
-    // Reinsere a aresta (u, v)
     void addEdgeBack(int u, int v)
     {
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
 
-    // DFS auxiliar para marcar vértices visitados
     void DFSUtil(int u, vector<bool> &visited)
     {
         visited[u] = true;
@@ -55,7 +50,6 @@ public:
                 DFSUtil(v, visited);
     }
 
-    // Verifica se, após a remoção da aresta (u, v), u e v continuam conectados
     bool isConnectedAfterRemoval(int u, int v)
     {
         vector<bool> visited(V, false);
@@ -64,7 +58,6 @@ public:
     }
 };
 
-// MÉTODO INGÊNUO: verifica se a aresta (u, v) é ponte
 bool isBridgeNaive(Graph &g, int u, int v)
 {
     g.removeEdge(u, v);
@@ -73,7 +66,6 @@ bool isBridgeNaive(Graph &g, int u, int v)
     return !connected;
 }
 
-// ALGORITMO DE TARJAN PARA DETECÇÃO DE PONTES
 void bridgeUtilTarjan(int u, vector<bool> &visited, vector<int> &disc, vector<int> &low, vector<int> &parent,
                       vector<pair<int, int>> &bridges, Graph &g, int &timeCounter)
 {
@@ -112,8 +104,7 @@ vector<pair<int, int>> findBridgesTarjan(Graph &g)
     return bridges;
 }
 
-// ALGORITMO DE FLEURY utilizando verificação de ponte (método ingênuo)
-void fleuryEulerianPathNaive(Graph g, int start)
+void fleuryEulerianPathNaive(Graph g, int start, bool show)
 {
     vector<int> path;
     int u = start;
@@ -144,14 +135,16 @@ void fleuryEulerianPathNaive(Graph g, int start)
         path.push_back(u);
     }
 
-    cout << "Caminho Euleriano (Fleury - metodo ingenuo): ";
-    for (int v : path)
-        cout << v << " ";
-    cout << endl;
+    if (show)
+    {
+        cout << "Caminho Euleriano (Fleury - metodo ingenuo): ";
+        for (int v : path)
+            cout << v << " ";
+        cout << endl;
+    }
 }
 
-// ALGORITMO DE FLEURY utilizando verificação de ponte com Tarjan
-void fleuryEulerianPathTarjan(Graph g, int start)
+void fleuryEulerianPathTarjan(Graph g, int start, bool show)
 {
     vector<int> path;
     int u = start;
@@ -192,13 +185,15 @@ void fleuryEulerianPathTarjan(Graph g, int start)
         path.push_back(u);
     }
 
-    cout << "Caminho Euleriano (Fleury - metodo Tarjan): ";
-    for (int v : path)
-        cout << v << " ";
-    cout << endl;
+    if (show)
+    {
+        cout << "Caminho Euleriano (Fleury - metodo Tarjan): ";
+        for (int v : path)
+            cout << v << " ";
+        cout << endl;
+    }
 }
 
-// Verifica se o grafo é Euleriano (todos os vértices com grau par)
 bool isEulerian(Graph &g)
 {
     for (int i = 0; i < g.V; i++)
@@ -209,8 +204,6 @@ bool isEulerian(Graph &g)
     return true;
 }
 
-// Tenta converter o grafo para Euleriano emparelhando vértices de grau ímpar
-// Retorna true se obteve sucesso.
 bool makeEulerian(Graph &g)
 {
     vector<int> odds;
@@ -219,12 +212,11 @@ bool makeEulerian(Graph &g)
         if (g.adj[i].size() % 2 != 0)
             odds.push_back(i);
     }
-    // O número de vértices com grau ímpar deve ser par
+
     if (odds.size() % 2 != 0)
-        return false; // situação inesperada
+        return false;
 
     bool converted = true;
-    // Tenta parear os vértices ímpares
     for (size_t i = 0; i + 1 < odds.size(); i += 2)
     {
         int u = odds[i], v = odds[i + 1];
@@ -256,12 +248,9 @@ bool makeEulerian(Graph &g)
     return isEulerian(g) && converted;
 }
 
-// Cria um grafo completo Euleriano com V vértices.
-// Se V for ímpar, o grafo completo já é Euleriano. Se for par, remove-se uma combinação perfeita.
 Graph createCompleteEulerianGraph(int V)
 {
     Graph newGraph(V);
-    // Cria o grafo completo
     for (int i = 0; i < V; i++)
     {
         for (int j = i + 1; j < V; j++)
@@ -269,7 +258,6 @@ Graph createCompleteEulerianGraph(int V)
             newGraph.addEdge(i, j);
         }
     }
-    // Se V for par, o grau de cada vértice é ímpar; remova uma combinação perfeita.
     if (V % 2 == 0)
     {
         for (int i = 0; i < V / 2; i++)
@@ -284,8 +272,16 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        cout << "Uso: " << argv[0] << " <numero_de_vertices>" << endl;
+        cout << "Uso: " << argv[0] << " <numero_de_vertices> [-s]" << endl;
         return 1;
+    }
+
+    bool showDetails = false;
+    if (argc >= 3)
+    {
+        string arg = argv[2];
+        if (arg == "-s")
+            showDetails = true;
     }
 
     srand(time(NULL));
@@ -296,13 +292,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Define o número de arestas: pelo menos V-1 (para conectividade) mais um extra aleatório
-    int extra = rand() % V; // valor entre 0 e V-1
+    auto startGraph = high_resolution_clock::now();
+
+    int extra = rand() % V;
     int M = (V - 1) + extra;
 
     Graph g(V);
 
-    // Gera uma árvore geradora (spanning tree) para garantir conectividade
     vector<int> connected;
     vector<int> notConnected;
     for (int i = 0; i < V; i++)
@@ -335,12 +331,15 @@ int main(int argc, char *argv[])
         currentEdges++;
     }
 
+    auto endGraph = high_resolution_clock::now();
+    double durationGraph = duration_cast<duration<double, milli>>(endGraph - startGraph).count();
+
     cout << "====================================" << endl;
     cout << "Grafo aleatorio gerado:" << endl;
     cout << "Numero de vertices: " << V << endl;
     cout << "Numero de arestas: " << currentEdges << endl;
+    cout << "Tempo de geracao do grafo: " << fixed << setprecision(6) << durationGraph << " ms" << endl;
 
-    // Contagem de pontes usando ambos os métodos
     vector<pair<int, int>> edges;
     vector<vector<bool>> marked(V, vector<bool>(V, false));
     for (int u = 0; u < V; u++)
@@ -371,16 +370,15 @@ int main(int argc, char *argv[])
     double duration_tarjan = duration_cast<duration<double, milli>>(end_tarjan - start_tarjan).count();
 
     cout << "------------------------------------" << endl;
-    cout << "Metodo ingenuo:" << endl;
+    cout << "Metodo ingenuo (pontes):" << endl;
     cout << "Numero de pontes encontradas: " << bridgeCountNaive << endl;
     cout << "Tempo de execucao: " << fixed << setprecision(6) << duration_naive << " ms" << endl;
     cout << "------------------------------------" << endl;
-    cout << "Metodo Tarjan:" << endl;
+    cout << "Metodo Tarjan (pontes):" << endl;
     cout << "Numero de pontes encontradas: " << bridgesTarjan.size() << endl;
     cout << "Tempo de execucao: " << fixed << setprecision(6) << duration_tarjan << " ms" << endl;
     cout << "====================================" << endl;
 
-    // Verifica se o grafo é Euleriano; caso não seja, tenta convertê-lo
     if (!isEulerian(g))
     {
         cout << "O grafo nao e Euleriano. Tentando converter para grafo Euleriano..." << endl;
@@ -402,20 +400,67 @@ int main(int argc, char *argv[])
         cout << "O grafo original ja e Euleriano." << endl;
     }
 
-    // Exibe a busca do caminho Euleriano se o grafo for Euleriano
-    if (isEulerian(g))
+    cout << "====================================" << endl;
+    cout << "Executando Algoritmo de Fleury para busca do caminho Euleriano:" << endl;
+
+    Graph g_naive = g;
+    Graph g_tarjan = g;
+
+    double durationFleuryNaivePrint = 0.0, durationFleuryNaiveNoPrint = 0.0;
+    if (showDetails)
     {
-        cout << "Executando Algoritmo de Fleury para busca do caminho Euleriano:" << endl;
-        Graph g_naive = g;
-        Graph g_tarjan = g;
-        cout << "Busca do caminho Euleriano (usando metodo ingenuo para pontes):" << endl;
-        fleuryEulerianPathNaive(g_naive, 0);
-        cout << "Busca do caminho Euleriano (usando metodo Tarjan para pontes):" << endl;
-        fleuryEulerianPathTarjan(g_tarjan, 0);
+        auto startFleuryNaivePrint = high_resolution_clock::now();
+        fleuryEulerianPathNaive(g_naive, 0, true);
+        auto endFleuryNaivePrint = high_resolution_clock::now();
+        durationFleuryNaivePrint = duration_cast<duration<double, milli>>(endFleuryNaivePrint - startFleuryNaivePrint).count();
+
+        Graph g_naive_noPrint = g;
+        auto startFleuryNaiveNoPrint = high_resolution_clock::now();
+        fleuryEulerianPathNaive(g_naive_noPrint, 0, false);
+        auto endFleuryNaiveNoPrint = high_resolution_clock::now();
+        durationFleuryNaiveNoPrint = duration_cast<duration<double, milli>>(endFleuryNaiveNoPrint - startFleuryNaiveNoPrint).count();
+
+        cout << "Metodo Fleury ingenuo:" << endl;
+        cout << "Tempo de execucao (com print): " << fixed << setprecision(6) << durationFleuryNaivePrint << " ms" << endl;
+        cout << "Tempo de execucao (sem print): " << fixed << setprecision(6) << durationFleuryNaiveNoPrint << " ms" << endl;
     }
     else
     {
-        cout << "Nao foi possivel obter um grafo Euleriano para busca do caminho Euleriano." << endl;
+        auto startFleuryNaive = high_resolution_clock::now();
+        fleuryEulerianPathNaive(g_naive, 0, false);
+        auto endFleuryNaive = high_resolution_clock::now();
+        double durationFleuryNaive = duration_cast<duration<double, milli>>(endFleuryNaive - startFleuryNaive).count();
+        cout << "Metodo Fleury ingenuo:" << endl;
+        cout << "Tempo de execucao: " << fixed << setprecision(6) << durationFleuryNaive << " ms" << endl;
+    }
+
+    double durationFleuryTarjanPrint = 0.0, durationFleuryTarjanNoPrint = 0.0;
+    if (showDetails)
+    {
+        auto startFleuryTarjanPrint = high_resolution_clock::now();
+        fleuryEulerianPathTarjan(g_tarjan, 0, true);
+        auto endFleuryTarjanPrint = high_resolution_clock::now();
+        durationFleuryTarjanPrint = duration_cast<duration<double, milli>>(endFleuryTarjanPrint - startFleuryTarjanPrint).count();
+
+        // Para medir sem prints, cria outra copia
+        Graph g_tarjan_noPrint = g;
+        auto startFleuryTarjanNoPrint = high_resolution_clock::now();
+        fleuryEulerianPathTarjan(g_tarjan_noPrint, 0, false);
+        auto endFleuryTarjanNoPrint = high_resolution_clock::now();
+        durationFleuryTarjanNoPrint = duration_cast<duration<double, milli>>(endFleuryTarjanNoPrint - startFleuryTarjanNoPrint).count();
+
+        cout << "Metodo Fleury Tarjan:" << endl;
+        cout << "Tempo de execucao (com print): " << fixed << setprecision(6) << durationFleuryTarjanPrint << " ms" << endl;
+        cout << "Tempo de execucao (sem print): " << fixed << setprecision(6) << durationFleuryTarjanNoPrint << " ms" << endl;
+    }
+    else
+    {
+        auto startFleuryTarjan = high_resolution_clock::now();
+        fleuryEulerianPathTarjan(g_tarjan, 0, false);
+        auto endFleuryTarjan = high_resolution_clock::now();
+        double durationFleuryTarjan = duration_cast<duration<double, milli>>(endFleuryTarjan - startFleuryTarjan).count();
+        cout << "Metodo Fleury Tarjan:" << endl;
+        cout << "Tempo de execucao: " << fixed << setprecision(6) << durationFleuryTarjan << " ms" << endl;
     }
 
     return 0;
