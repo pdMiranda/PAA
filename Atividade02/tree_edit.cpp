@@ -100,7 +100,6 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
     std::vector<std::vector<int>> forestdist(n+1, std::vector<int>(m+1, 0));
     std::vector<std::vector<std::string>> forestop(n+1, std::vector<std::string>(m+1, ""));
 
-    // --- PRINTS DAS ÁRVORES ANTES DOS LOGS ---
     std::unordered_map<Node*, std::string> ids1, ids2;
     int id_counter = 1;
     std::vector<std::string> t1_nodes, t2_nodes;
@@ -124,7 +123,7 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
     printSideBySide(mat1, mat2, "T1", "T2");
     std::cout << "\n";
 
-    // --- LOGS DO ALGORITMO ---
+    // --- LOGS ---
 
     std::vector<std::vector<std::string>> last_forestop;
     std::vector<std::vector<int>> last_forestdist;
@@ -282,10 +281,8 @@ Node* generateRandomTree(
 
     std::uniform_int_distribution<int> labelDist(0, localLabels.size() - 1);
 
-    // Novo: limite máximo de nós
     int maxNodes = 2 * minNodes;
 
-    // Função auxiliar para gerar árvore limitada em número de nós
     std::function<Node*(int, int&)> gen = [&](int depth, int& nodesLeft) -> Node* {
         if (nodesLeft <= 0 || (localMaxDepth == 0 || depth >= localMaxDepth))
             return nullptr;
@@ -309,7 +306,6 @@ Node* generateRandomTree(
         root = gen(0, nodesLeft);
         ++tries;
     } while (root && tries < 20 && [&]{
-        // Função para contar nós
         std::function<int(Node*)> countNodes = [&](Node* n) {
             if (!n) return 0;
             int cnt = 1;
