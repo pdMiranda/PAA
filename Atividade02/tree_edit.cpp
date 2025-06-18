@@ -8,6 +8,7 @@
 #include <queue>
 #include <stack>
 #include <tuple>
+#include <chrono>
 #include <set>
 
 struct TreeInfo {
@@ -87,6 +88,8 @@ static TreeInfo buildTreeInfo(Node* root) {
 }
 
 int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
+    auto t_start = std::chrono::high_resolution_clock::now();
+    int opCount = 0;
     auto T1 = buildTreeInfo(t1);
     auto T2 = buildTreeInfo(t2);
     int n = T1.postorder.size();
@@ -176,6 +179,7 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
                             chosen = "inserção";
                         }
                         treedist[ci][cj] = minc;
+                        opCount++;
                         op[ci][cj] = forestop[di][dj];
 
                         if (showLogs)
@@ -229,6 +233,11 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
     }
     
     int result = treedist[n-1][m-1];
+    auto t_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = t_end - t_start;
+
+    std::cout << "\nNúmero de operações (células preenchidas): " << opCount << "\n";
+    std::cout << "Tempo do algoritmo: " << elapsed.count() << " ms\n";
     return result;
 }
 
