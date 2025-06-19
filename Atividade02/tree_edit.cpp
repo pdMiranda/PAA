@@ -357,3 +357,31 @@ Node* generateRandomTree(
 
     return root;
 }
+
+Node* generateBigTree(int minNodes) {
+    static std::mt19937 rng(std::random_device{}());
+
+    // Gera labels únicos suficientes
+    std::vector<std::string> labels;
+    for (char c = 'A'; c <= 'Z' && (int)labels.size() < minNodes; ++c)
+        labels.push_back(std::string(1, c));
+    for (int i = 0; (int)labels.size() < minNodes; ++i)
+        labels.push_back("N" + std::to_string(i));
+
+    std::shuffle(labels.begin(), labels.end(), rng);
+
+    // Cria todos os nós
+    std::vector<Node*> nodes;
+    for (int i = 0; i < minNodes; ++i)
+        nodes.push_back(new Node(labels[i]));
+
+    // Conecta os nós para formar uma árvore
+    // Cada nó (exceto a raiz) recebe um pai aleatório entre os anteriores
+    for (int i = 1; i < minNodes; ++i) {
+        std::uniform_int_distribution<int> parentDist(0, i - 1);
+        int parentIdx = parentDist(rng);
+        nodes[parentIdx]->children.push_back(nodes[i]);
+    }
+
+    return nodes[0]; // raiz
+}

@@ -26,12 +26,15 @@ int main() {
     Node* T1 = generateRandomTree(6);
     Node* T2 = generateRandomTree(8);
 
+    //Node* T1 = generateBigTree(1000);
+    //Node* T2 = generateBigTree(1000);
+
     // std::vector<std::string> labels = {"A", "B", "C", "D", "X", "Y"};
     // Node* T1 = generateRandomTree(3, 3, labels, minNodes);
     // Node* T2 = generateRandomTree(3, 3, labels, minNodes);
 
     std::cout << "Iniciando calculo da distancia de edicao entre as arvores T1 e T2...\n \n";
-    int result = treeEditDistance(T1, T2);
+    int result = treeEditDistance(T1, T2, true);
 
     //LOGS
     //int result = treeEditDistance(T1, T2, true);

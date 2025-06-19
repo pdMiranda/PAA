@@ -16,6 +16,8 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs = false);
 Node* makeSampleTree1();
 Node* makeSampleTree2();
 
+Node* generateBigTree(int minNodes = 100);
+
 Node* generateRandomTree(
     int minNodes = 6
 );
