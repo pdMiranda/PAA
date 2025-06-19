@@ -1,12 +1,14 @@
 #include "tree_edit.h"
 #include <algorithm>
 #include <functional>
+#include <filesystem> 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <chrono>
 #include <random>
 #include <queue>
 #include <set>
-#include <chrono>
 
 struct TreeInfo {
     std::vector<Node*> postorder; // pós-ordem
@@ -85,6 +87,16 @@ static TreeInfo buildTreeInfo(Node* root) {
 }
 
 int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
+
+    // ARQUIVOS DE LOGS
+    std::ofstream logFileAll, logFileMain;
+    std::string logPathAll = "logs/forestdist.log";
+    std::string logPathMain = "logs/treedist.log";
+    if (!std::filesystem::exists("logs"))
+        std::filesystem::create_directory("logs");
+    logFileAll.open(logPathAll, std::ios::out | std::ios::trunc);
+    logFileMain.open(logPathMain, std::ios::out | std::ios::trunc);
+
     auto t_start = std::chrono::high_resolution_clock::now();
     int opCount = 0;
     auto T1 = buildTreeInfo(t1);
@@ -140,14 +152,18 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
             for (int di = i_lld+1; di <= i+1; ++di) {
                 forestdist[di][j_lld] = forestdist[di-1][j_lld] + 1;
                 forestop[di][j_lld] = "del";
-                if (showLogs)
-                    std::cout << "log: forestdist[" << di << "][" << j_lld << "] = " << forestdist[di][j_lld] << " (delecao de T1[" << T1.postorder[di-1]->label << "])\n";
+                std::string logMsg = "log: forestdist[" + std::to_string(di) + "][" + std::to_string(j_lld) + "] = " +
+                    std::to_string(forestdist[di][j_lld]) + " (delecao de T1[" + T1.postorder[di-1]->label + "])\n";
+                if (showLogs) std::cout << logMsg;
+                logFileAll << logMsg;
             }
             for (int dj = j_lld+1; dj <= j+1; ++dj) {
                 forestdist[i_lld][dj] = forestdist[i_lld][dj-1] + 1;
                 forestop[i_lld][dj] = "ins";
-                if (showLogs)
-                    std::cout << "log: forestdist[" << i_lld << "][" << dj << "] = " << forestdist[i_lld][dj] << " (insercao de T2[" << T2.postorder[dj-1]->label << "])\n";
+                std::string logMsg = "log: forestdist[" + std::to_string(i_lld) + "][" + std::to_string(dj) + "] = " +
+                    std::to_string(forestdist[i_lld][dj]) + " (insercao de T2[" + T2.postorder[dj-1]->label + "])\n";
+                if (showLogs) std::cout << logMsg;
+                logFileAll << logMsg;
             }
             for (int di = i_lld+1; di <= i+1; ++di) {
                 for (int dj = j_lld+1; dj <= j+1; ++dj) {
@@ -179,11 +195,19 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
                         opCount++;
                         op[ci][cj] = forestop[di][dj];
 
-                        if (showLogs)
-                            std::cout << "log: forestdist[" << di << "][" << dj << "] = " << minc
-                                      << " | del: " << c_del << ", ins: " << c_ins << ", sub: " << c_sub
-                                      << " | op: " << chosen
-                                      << " (T1[" << T1.postorder[ci]->label << "] x T2[" << T2.postorder[cj]->label << "])\n";
+                        // Log principal (apenas para treedist)
+                        std::string mainLogMsg = "treedist[" + std::to_string(ci) + "][" + std::to_string(cj) + "] = " + std::to_string(minc)
+                            + " | op: " + forestop[di][dj]
+                            + " (T1[" + T1.postorder[ci]->label + "] x T2[" + T2.postorder[cj]->label + "])\n";
+                        logFileMain << mainLogMsg;
+
+                        // Log detalhado (já existente)
+                        std::string logMsg = "log: forestdist[" + std::to_string(di) + "][" + std::to_string(dj) + "] = " + std::to_string(minc)
+                            + " | del: " + std::to_string(c_del) + ", ins: " + std::to_string(c_ins) + ", sub: " + std::to_string(c_sub)
+                            + " | op: " + chosen
+                            + " (T1[" + T1.postorder[ci]->label + "] x T2[" + T2.postorder[cj]->label + "])\n";
+                        if (showLogs) std::cout << logMsg;
+                        logFileAll << logMsg;
                     } else {
                         int c_del = forestdist[di-1][dj] + 1;
                         int c_ins = forestdist[di][dj-1] + 1;
@@ -201,10 +225,11 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
                             forestop[di][dj] = "ins";
                             chosen = "insercao";
                         }
-                        if (showLogs)
-                            std::cout << "log: forestdist[" << di << "][" << dj << "] = " << minc
-                                      << " | del: " << c_del << ", ins: " << c_ins << ", tree: " << c_sub
-                                      << " | op: " << chosen << "\n";
+                        std::string logMsg = "log: forestdist[" + std::to_string(di) + "][" + std::to_string(dj) + "] = " + std::to_string(minc)
+                            + " | del: " + std::to_string(c_del) + ", ins: " + std::to_string(c_ins) + ", tree: " + std::to_string(c_sub)
+                            + " | op: " + chosen + "\n";
+                        if (showLogs) std::cout << logMsg;
+                        logFileAll << logMsg;
                     }
                 }
             }
@@ -214,6 +239,9 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
             }
         }
     }
+
+    logFileAll.close();
+    logFileMain.close();
 
     std::cout << "\nMatriz de distancias (treedist):\n\n   |";
     for (int j = 0; j < m; ++j)
