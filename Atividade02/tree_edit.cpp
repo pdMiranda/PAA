@@ -3,13 +3,10 @@
 #include <functional>
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 #include <random>
 #include <queue>
-#include <stack>
-#include <tuple>
-#include <chrono>
 #include <set>
+#include <chrono>
 
 struct TreeInfo {
     std::vector<Node*> postorder; // pós-ordem
@@ -144,13 +141,13 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
                 forestdist[di][j_lld] = forestdist[di-1][j_lld] + 1;
                 forestop[di][j_lld] = "del";
                 if (showLogs)
-                    std::cout << "log: forestdist[" << di << "][" << j_lld << "] = " << forestdist[di][j_lld] << " (deleção de T1[" << T1.postorder[di-1]->label << "])\n";
+                    std::cout << "log: forestdist[" << di << "][" << j_lld << "] = " << forestdist[di][j_lld] << " (delecao de T1[" << T1.postorder[di-1]->label << "])\n";
             }
             for (int dj = j_lld+1; dj <= j+1; ++dj) {
                 forestdist[i_lld][dj] = forestdist[i_lld][dj-1] + 1;
                 forestop[i_lld][dj] = "ins";
                 if (showLogs)
-                    std::cout << "log: forestdist[" << i_lld << "][" << dj << "] = " << forestdist[i_lld][dj] << " (inserção de T2[" << T2.postorder[dj-1]->label << "])\n";
+                    std::cout << "log: forestdist[" << i_lld << "][" << dj << "] = " << forestdist[i_lld][dj] << " (insercao de T2[" << T2.postorder[dj-1]->label << "])\n";
             }
             for (int di = i_lld+1; di <= i+1; ++di) {
                 for (int dj = j_lld+1; dj <= j+1; ++dj) {
@@ -169,14 +166,14 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
                                 chosen = "match";
                             } else {
                                 forestop[di][dj] = "sub";
-                                chosen = "substituição";
+                                chosen = "substituicao";
                             }
                         } else if (minc == c_del) {
                             forestop[di][dj] = "del";
-                            chosen = "deleção";
+                            chosen = "delecao";
                         } else {
                             forestop[di][dj] = "ins";
-                            chosen = "inserção";
+                            chosen = "insercao";
                         }
                         treedist[ci][cj] = minc;
                         opCount++;
@@ -199,10 +196,10 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
                             chosen = "tree";
                         } else if (minc == c_del) {
                             forestop[di][dj] = "del";
-                            chosen = "deleção";
+                            chosen = "delecao";
                         } else {
                             forestop[di][dj] = "ins";
-                            chosen = "inserção";
+                            chosen = "insercao";
                         }
                         if (showLogs)
                             std::cout << "log: forestdist[" << di << "][" << dj << "] = " << minc
@@ -218,7 +215,7 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
         }
     }
 
-    std::cout << "\nMatriz de distâncias (treedist):\n\n   |";
+    std::cout << "\nMatriz de distancias (treedist):\n\n   |";
     for (int j = 0; j < m; ++j)
         std::cout << " " << std::setw(3) << T2.postorder[j]->label;
     std::cout << "\n---+";
@@ -236,7 +233,7 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = t_end - t_start;
 
-    std::cout << "\nNúmero de operações (células preenchidas): " << opCount << "\n";
+    std::cout << "\nNumero de operacoes (celulas preenchidas): " << opCount << "\n";
     std::cout << "Tempo do algoritmo: " << elapsed.count() << " ms\n";
     return result;
 }

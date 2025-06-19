@@ -21,7 +21,7 @@ int maxDegree(Node* n) {
 int main() {
 
     std::cout << "Algoritmo: Zhang-Shasha (Tree Edit Distance)\n";
-    std::cout << "Complexidade teórica: O(n1·n2·D²), onde n1 e n2 são os tamanhos das árvores e D é o grau máximo\n\n";
+    std::cout << "Complexidade teorica: O(n1·n2·D²), onde n1 e n2 sao os tamanhos das arvores e D eh o grau maximo\n\n";
 
     Node* T1 = generateRandomTree(6);
     Node* T2 = generateRandomTree(8);
@@ -30,7 +30,7 @@ int main() {
     // Node* T1 = generateRandomTree(3, 3, labels, minNodes);
     // Node* T2 = generateRandomTree(3, 3, labels, minNodes);
 
-    std::cout << "Iniciando cálculo da distância de edição entre as árvores T1 e T2...\n \n";
+    std::cout << "Iniciando calculo da distancia de edicao entre as arvores T1 e T2...\n \n";
     int result = treeEditDistance(T1, T2);
 
     //LOGS
@@ -42,7 +42,7 @@ int main() {
     int d2 = maxDegree(T2);
     int D = std::max(d1, d2);
 
-    std::cout << "\nComplexidade teórica nesta execução: O(" << n1 << "·" << n2 << "·" << D << "²)\n";
-    std::cout << "\nResultado final: Distância de edição entre T1 e T2 = " << result << "\n";
+    std::cout << "\nComplexidade teorica nesta execucao: O(" << n1 << "·" << n2 << "·" << D << "²) -> O(n1·n2·D²)\n";
+    std::cout << "\nResultado final: Distancia de edicao entre T1 e T2 = " << result << "\n";
     return 0;
 }
