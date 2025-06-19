@@ -43,6 +43,7 @@ int main() {
     int D = std::max(d1, d2);
 
     std::cout << "\nComplexidade teorica nesta execucao: O(" << n1 << "·" << n2 << "·" << D << "²) -> O(n1·n2·D²)\n";
+    std::cout << "Complexidade de espaco nesta execucao: O(" << n1 << "·" << n2 << ") -> O(n1·n2)\n";
     std::cout << "\nResultado final: Distancia de edicao entre T1 e T2 = " << result << "\n";
     return 0;
 }

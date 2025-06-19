@@ -261,8 +261,14 @@ int treeEditDistance(Node* t1, Node* t2, bool showLogs) {
     auto t_end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = t_end - t_start;
 
-    std::cout << "\nNumero de operacoes (celulas preenchidas): " << opCount << "\n";
+    size_t treedist_bytes = n * m * sizeof(int);
+    size_t forestdist_bytes = (n+1) * (m+1) * sizeof(int);
+    size_t total_bytes = treedist_bytes + forestdist_bytes;
+    std::cout << "\nEspaco ocupado pelas principais matrizes: "
+              << (total_bytes / 1024.0) << " KB (" << total_bytes << " bytes)\n";
+    std::cout << "Numero de operacoes (celulas preenchidas): " << opCount << "\n";
     std::cout << "Tempo do algoritmo: " << elapsed.count() << " ms\n";
+
     return result;
 }
 
